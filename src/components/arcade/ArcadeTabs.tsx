@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ArcadeTheme } from '@/constants/theme';
+import { ArcadeTheme, Tokens } from '@/constants/theme';
 
 export type MainTabType = 'games' | 'leaderboard' | 'history';
 export type SubCategoryType = 'daily' | 'quiz' | 'duels';
@@ -12,6 +12,8 @@ interface ArcadeTabsProps {
   onTabChange: (tab: MainTabType) => void;
   activeCategory: SubCategoryType;
   onCategoryChange: (cat: SubCategoryType) => void;
+  dailyCount: number;
+  quizCount: number;
 }
 
 export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
@@ -19,6 +21,8 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
   onTabChange,
   activeCategory,
   onCategoryChange,
+  dailyCount,
+  quizCount,
 }) => {
   const handleTabPress = (tab: MainTabType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -42,7 +46,7 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
           <Ionicons
             name="game-controller"
             size={16}
-            color={activeTab === 'games' ? '#FFFFFF' : ArcadeTheme.textSecondary}
+            color={activeTab === 'games' ? Tokens.white : ArcadeTheme.textSecondary}
           />
           <Text
             style={[styles.switcherTabText, activeTab === 'games' && styles.switcherTabTextActive]}
@@ -59,7 +63,7 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
           <Ionicons
             name="trophy"
             size={16}
-            color={activeTab === 'leaderboard' ? '#FFFFFF' : ArcadeTheme.textSecondary}
+            color={activeTab === 'leaderboard' ? Tokens.white : ArcadeTheme.textSecondary}
           />
           <Text
             style={[
@@ -79,7 +83,7 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
           <Ionicons
             name="time-outline"
             size={16}
-            color={activeTab === 'history' ? '#FFFFFF' : ArcadeTheme.textSecondary}
+            color={activeTab === 'history' ? Tokens.white : ArcadeTheme.textSecondary}
           />
           <Text
             style={[styles.switcherTabText, activeTab === 'history' && styles.switcherTabTextActive]}
@@ -104,7 +108,7 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
             <View
               style={[
                 styles.dotIndicator,
-                { backgroundColor: activeCategory === 'daily' ? ArcadeTheme.primary : '#515E7C' },
+                { backgroundColor: activeCategory === 'daily' ? ArcadeTheme.primary : Tokens.muted },
               ]}
             />
             <Text
@@ -113,7 +117,7 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
                 activeCategory === 'daily' && styles.catPillTextActive,
               ]}
             >
-              DÉFIS DU JOUR <Text style={styles.catCount}>5 JEUX</Text>
+              DÉFIS DU JOUR <Text style={styles.catCount}>{dailyCount} JEUX</Text>
             </Text>
           </TouchableOpacity>
 
@@ -125,13 +129,13 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
             <View
               style={[
                 styles.dotIndicator,
-                { backgroundColor: activeCategory === 'quiz' ? ArcadeTheme.secondary : '#515E7C' },
+                { backgroundColor: activeCategory === 'quiz' ? ArcadeTheme.secondary : Tokens.muted },
               ]}
             />
             <Text
               style={[styles.catPillText, activeCategory === 'quiz' && styles.catPillTextActive]}
             >
-              QUIZ LIBRES <Text style={styles.catCount}>7 MODES</Text>
+              QUIZ LIBRES <Text style={styles.catCount}>{quizCount} MODES</Text>
             </Text>
           </TouchableOpacity>
 
@@ -140,7 +144,7 @@ export const ArcadeTabs: React.FC<ArcadeTabsProps> = ({
             onPress={() => handleCatPress('duels')}
             activeOpacity={0.7}
           >
-            <View style={[styles.dotIndicator, { backgroundColor: '#FFD700' }]} />
+            <View style={[styles.dotIndicator, { backgroundColor: Tokens.gold }]} />
             <Text
               style={[styles.catPillText, activeCategory === 'duels' && styles.catPillTextActive]}
             >
@@ -161,11 +165,11 @@ const styles = StyleSheet.create({
   },
   capsuleSwitcher: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(19, 27, 47, 0.7)',
+    backgroundColor: Tokens.card70,
     borderRadius: 24,
     padding: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: Tokens.white08,
   },
   switcherTab: {
     flex: 1,
@@ -177,9 +181,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   switcherTabActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: Tokens.white12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: Tokens.white15,
   },
   switcherTabText: {
     color: ArcadeTheme.textSecondary,
@@ -188,7 +192,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   switcherTabTextActive: {
-    color: '#FFFFFF',
+    color: Tokens.white,
   },
   categoryPillsScroll: {
     gap: 8,
@@ -197,17 +201,17 @@ const styles = StyleSheet.create({
   catPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(19, 27, 47, 0.6)',
+    backgroundColor: Tokens.card60,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: Tokens.white06,
     gap: 6,
   },
   catPillActive: {
-    backgroundColor: 'rgba(0, 210, 255, 0.12)',
-    borderColor: 'rgba(0, 210, 255, 0.35)',
+    backgroundColor: Tokens.cyan12,
+    borderColor: Tokens.cyan35,
   },
   dotIndicator: {
     width: 6,
@@ -220,7 +224,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   catPillTextActive: {
-    color: '#FFFFFF',
+    color: Tokens.white,
   },
   catCount: {
     color: ArcadeTheme.textMuted,

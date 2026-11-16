@@ -1,6 +1,14 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- JUDA GAMING — BASE DE DONNÉES SUPABASE (V1)
 -- À copier-coller dans Supabase -> SQL Editor -> New Query -> Run
+--
+-- Ce script est ré-exécutable : il supprime les politiques existantes
+-- avant de les recréer.
+--
+-- Principe de sécurité : un joueur ne peut que LIRE les données de jeu.
+-- Toute écriture qui touche à l'économie (points, rôle, gains, tentatives)
+-- passe par une Edge Function utilisant la clé service_role, qui contourne
+-- la RLS. Voir CLAUDE.md > « Règles métier ».
 -- ═══════════════════════════════════════════════════════════════════
 
 -- 1. PROFILS DES JOUEURS
@@ -15,14 +23,38 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Activation de RLS sur profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Lecture publique des profils" ON public.profiles;
 CREATE POLICY "Lecture publique des profils"
   ON public.profiles FOR SELECT USING (true);
 
+-- Un joueur peut modifier sa propre ligne (ex. avatar, pseudo), mais le
+-- trigger ci-dessous empêche de modifier les colonnes sensibles.
+DROP POLICY IF EXISTS "Modification de son propre profil" ON public.profiles;
 CREATE POLICY "Modification de son propre profil"
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Protection des colonnes sensibles : un joueur ne peut pas s'attribuer des
+-- points ni passer admin. Les écritures via service_role (Edge Functions)
+-- ont auth.uid() NULL et ne sont donc pas bloquées.
+CREATE OR REPLACE FUNCTION public.protect_profile_columns()
+RETURNS trigger AS $$
+BEGIN
+  IF auth.uid() = NEW.id THEN
+    NEW.points := OLD.points;
+    NEW.total_points_earned := OLD.total_points_earned;
+    NEW.role := OLD.role;
+  END IF;
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS protect_profile_columns ON public.profiles;
+CREATE TRIGGER protect_profile_columns
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.protect_profile_columns();
 
 -- 2. TABLE DE CONFIGURATION DU JEU
 CREATE TABLE IF NOT EXISTS public.config (
@@ -33,14 +65,25 @@ CREATE TABLE IF NOT EXISTS public.config (
 
 ALTER TABLE public.config ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Lecture de la config pour tous"
-  ON public.config FOR SELECT USING (true);
+-- Lecture réservée aux admins. Les codes d'activation et autres réglages ne
+-- doivent pas être servis au client anonyme. Les Edge Functions lisent la
+-- config via service_role (hors RLS).
+DROP POLICY IF EXISTS "Lecture de la config pour tous" ON public.config;
+DROP POLICY IF EXISTS "Lecture de la config pour les admins" ON public.config;
+CREATE POLICY "Lecture de la config pour les admins"
+  ON public.config FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.role = 'admin'
+    )
+  );
 
--- Insertion des valeurs de base
+-- Réglages publics de l'économie. Les codes d'activation ne sont PAS stockés
+-- ici : voir src/stores/authStore.ts (vérification temporaire côté client,
+-- à déplacer dans une Edge Function avant toute vraie mise en service).
 INSERT INTO public.config (key, value) VALUES
   ('daily_point_cap', '300'::jsonb),
-  ('weekly_point_cap', '1500'::jsonb),
-  ('activation_codes', '["MANGA2026", "ARCADEV1", "CHAMAH99"]'::jsonb)
+  ('weekly_point_cap', '1500'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
 -- 3. QUESTIONS DE QUIZ
@@ -59,10 +102,14 @@ CREATE TABLE IF NOT EXISTS public.questions (
 
 ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
 
+-- Attention : cette politique expose aussi correct_index au client. Le tirage
+-- des questions et la validation des réponses devront passer par une Edge
+-- Function qui ne renvoie pas la bonne réponse au joueur.
+DROP POLICY IF EXISTS "Lecture des questions validées" ON public.questions;
 CREATE POLICY "Lecture des questions validées"
   ON public.questions FOR SELECT USING (status = 'validated');
 
--- 4. SESSIONS DE QUIZ JOUÉES
+-- 4. SESSIONS DE QUIZ JOUÉES (écrites par Edge Function)
 CREATE TABLE IF NOT EXISTS public.quiz_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -75,13 +122,12 @@ CREATE TABLE IF NOT EXISTS public.quiz_sessions (
 
 ALTER TABLE public.quiz_sessions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Lecture de ses propres sessions" ON public.quiz_sessions;
+DROP POLICY IF EXISTS "Insertion de sa propre session" ON public.quiz_sessions;
 CREATE POLICY "Lecture de ses propres sessions"
   ON public.quiz_sessions FOR SELECT USING (auth.uid() = player_id);
 
-CREATE POLICY "Insertion de sa propre session"
-  ON public.quiz_sessions FOR INSERT WITH CHECK (auth.uid() = player_id);
-
--- 5. HISTORIQUE DES QUESTIONS VUES (ANTI-RÉPÉTITION)
+-- 5. HISTORIQUE DES QUESTIONS VUES (anti-répétition, écrit par Edge Function)
 CREATE TABLE IF NOT EXISTS public.seen_questions (
   player_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   question_id UUID REFERENCES public.questions(id) ON DELETE CASCADE,
@@ -91,10 +137,12 @@ CREATE TABLE IF NOT EXISTS public.seen_questions (
 
 ALTER TABLE public.seen_questions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Gestion de ses questions vues"
-  ON public.seen_questions FOR ALL USING (auth.uid() = player_id);
+DROP POLICY IF EXISTS "Gestion de ses questions vues" ON public.seen_questions;
+DROP POLICY IF EXISTS "Lecture de ses questions vues" ON public.seen_questions;
+CREATE POLICY "Lecture de ses questions vues"
+  ON public.seen_questions FOR SELECT USING (auth.uid() = player_id);
 
--- 6. TRANSACTIONS DE POINTS
+-- 6. TRANSACTIONS DE POINTS (écrites par Edge Function)
 CREATE TABLE IF NOT EXISTS public.point_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -106,6 +154,7 @@ CREATE TABLE IF NOT EXISTS public.point_transactions (
 
 ALTER TABLE public.point_transactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Lecture de ses propres transactions" ON public.point_transactions;
 CREATE POLICY "Lecture de ses propres transactions"
   ON public.point_transactions FOR SELECT USING (auth.uid() = player_id);
 
@@ -123,10 +172,14 @@ CREATE TABLE IF NOT EXISTS public.daily_content (
 
 ALTER TABLE public.daily_content ENABLE ROW LEVEL SECURITY;
 
+-- Lecture pour tous les joueurs connectés. Les valeurs cachées (puissance du
+-- Juste prix, réponses) ne devraient pas figurer en clair dans ces colonnes :
+-- à arbitrer lors de la construction des mini-jeux.
+DROP POLICY IF EXISTS "Lecture du contenu du jour pour tous" ON public.daily_content;
 CREATE POLICY "Lecture du contenu du jour pour tous"
   ON public.daily_content FOR SELECT USING (true);
 
--- 8. TENTATIVES DE QUÊTES QUOTIDIENNES PAR JOUEUR
+-- 8. TENTATIVES DE QUÊTES QUOTIDIENNES PAR JOUEUR (écrites par Edge Function)
 CREATE TABLE IF NOT EXISTS public.daily_attempts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -144,10 +197,12 @@ CREATE TABLE IF NOT EXISTS public.daily_attempts (
 
 ALTER TABLE public.daily_attempts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Gestion de ses propres quêtes quotidiennes"
-  ON public.daily_attempts FOR ALL USING (auth.uid() = player_id);
+DROP POLICY IF EXISTS "Gestion de ses propres quêtes quotidiennes" ON public.daily_attempts;
+DROP POLICY IF EXISTS "Lecture de ses propres quêtes quotidiennes" ON public.daily_attempts;
+CREATE POLICY "Lecture de ses propres quêtes quotidiennes"
+  ON public.daily_attempts FOR SELECT USING (auth.uid() = player_id);
 
--- 9. SUIVI DES GAINS JOURNALIERS (PLAFONDS)
+-- 9. SUIVI DES GAINS JOURNALIERS (PLAFONDS, écrit par Edge Function)
 CREATE TABLE IF NOT EXISTS public.daily_earnings (
   player_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   date DATE NOT NULL,
@@ -158,8 +213,10 @@ CREATE TABLE IF NOT EXISTS public.daily_earnings (
 
 ALTER TABLE public.daily_earnings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Gestion de ses gains quotidiens"
-  ON public.daily_earnings FOR ALL USING (auth.uid() = player_id);
+DROP POLICY IF EXISTS "Gestion de ses gains quotidiens" ON public.daily_earnings;
+DROP POLICY IF EXISTS "Lecture de ses gains quotidiens" ON public.daily_earnings;
+CREATE POLICY "Lecture de ses gains quotidiens"
+  ON public.daily_earnings FOR SELECT USING (auth.uid() = player_id);
 
 -- 10. TRIGGER AUTOMATIQUE CRÉATION DE PROFIL LORS DE L'INSCRIPTION
 CREATE OR REPLACE FUNCTION public.handle_new_user()

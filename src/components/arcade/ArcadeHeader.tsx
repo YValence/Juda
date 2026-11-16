@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ArcadeTheme } from '@/constants/theme';
+import { ArcadeTheme, Tokens } from '@/constants/theme';
 
 interface ArcadeHeaderProps {
   username?: string;
@@ -91,7 +91,7 @@ export const ArcadeHeader: React.FC<ArcadeHeaderProps> = ({
           {/* Barre d'XP néon */}
           <View style={styles.xpBarTrack}>
             <LinearGradient
-              colors={['#00F5A0', '#00D2FF']}
+              colors={[Tokens.green, Tokens.cyan]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.xpBarFill, { width: `${xpPercent}%` }]}
@@ -122,12 +122,12 @@ const styles = StyleSheet.create({
   pillBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Tokens.white05,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: Tokens.white08,
     gap: 6,
   },
   pillBadgeText: {
@@ -145,19 +145,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Tokens.white05,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: Tokens.white08,
     alignItems: 'center',
     justifyContent: 'center',
   },
   userPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Tokens.white05,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: Tokens.white08,
     paddingRight: 12,
     paddingVertical: 3,
     paddingLeft: 4,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: Tokens.white,
     fontWeight: '900',
     fontSize: 13,
   },
@@ -195,9 +195,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 210, 255, 0.1)',
+    backgroundColor: Tokens.cyan10,
     borderWidth: 1,
-    borderColor: 'rgba(0, 210, 255, 0.25)',
+    borderColor: Tokens.cyan25,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -214,10 +214,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   xpBox: {
-    backgroundColor: 'rgba(19, 27, 47, 0.7)',
+    backgroundColor: Tokens.card70,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: Tokens.white06,
     padding: 12,
     gap: 6,
   },
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   xpFraction: {
-    color: '#00F5A0',
+    color: Tokens.green,
     fontSize: 11,
     fontWeight: '800',
   },
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   xpBarTrack: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: Tokens.white08,
     overflow: 'hidden',
   },
   xpBarFill: {

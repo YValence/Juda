@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ArcadeTheme } from '@/constants/theme';
+import { ArcadeTheme, Tokens } from '@/constants/theme';
 
 export const ArcadeInfoBanner: React.FC = () => {
   const [hideChrono, setHideChrono] = useState(false);
@@ -36,8 +36,8 @@ export const ArcadeInfoBanner: React.FC = () => {
           <Switch
             value={hideChrono}
             onValueChange={toggleSwitch}
-            trackColor={{ false: '#1A243D', true: ArcadeTheme.primary }}
-            thumbColor={'#FFFFFF'}
+            trackColor={{ false: Tokens.surfaceRaised, true: ArcadeTheme.primary }}
+            thumbColor={Tokens.white}
             style={styles.switch}
           />
           <Text style={styles.switchLabel}>
@@ -54,10 +54,10 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 18,
     marginVertical: 6,
-    backgroundColor: 'rgba(19, 27, 47, 0.75)',
+    backgroundColor: Tokens.card75,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: Tokens.white08,
     padding: 14,
     flexDirection: 'row',
     gap: 12,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(0, 210, 255, 0.1)',
+    backgroundColor: Tokens.cyan10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -89,12 +89,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   betaBadge: {
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    backgroundColor: Tokens.violet20,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
+    borderColor: Tokens.violet30,
   },
   betaText: {
     color: ArcadeTheme.secondary,

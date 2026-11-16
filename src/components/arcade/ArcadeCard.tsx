@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { ArcadeTheme } from '@/constants/theme';
+import { ArcadeTheme, Tokens } from '@/constants/theme';
 
 export interface ArcadeGameCardData {
   id: string;
@@ -33,10 +33,10 @@ export const ArcadeCard: React.FC<ArcadeCardProps> = ({ game, onPress }) => {
         return (
           <View style={styles.visualContainer}>
             <LinearGradient
-              colors={['rgba(139, 92, 246, 0.3)', 'rgba(0, 210, 255, 0.15)']}
+              colors={[Tokens.violet30, Tokens.cyan15]}
               style={styles.silhouetteAura}
             >
-              <Ionicons name="person" size={54} color="rgba(255, 255, 255, 0.25)" />
+              <Ionicons name="person" size={54} color={Tokens.white25} />
               <View style={styles.questionMarkOverlay}>
                 <Text style={styles.questionMarkText}>?</Text>
               </View>
@@ -67,7 +67,7 @@ export const ArcadeCard: React.FC<ArcadeCardProps> = ({ game, onPress }) => {
                 <Text style={styles.techKeyText}>E</Text>
               </View>
               <LinearGradient
-                colors={['rgba(0, 210, 255, 0.3)', 'rgba(19, 27, 47, 0.9)']}
+                colors={[Tokens.cyan30, Tokens.card90]}
                 style={styles.techCenterCircle}
               >
                 <Ionicons name="flash" size={26} color={ArcadeTheme.primary} />
@@ -80,10 +80,10 @@ export const ArcadeCard: React.FC<ArcadeCardProps> = ({ game, onPress }) => {
         return (
           <View style={styles.visualContainer}>
             <LinearGradient
-              colors={['rgba(139, 92, 246, 0.3)', 'rgba(255, 107, 107, 0.15)']}
+              colors={[Tokens.violet30, Tokens.red15]}
               style={styles.silhouetteAura}
             >
-              <Ionicons name="chatbubbles" size={44} color="rgba(255, 255, 255, 0.3)" />
+              <Ionicons name="chatbubbles" size={44} color={Tokens.white30} />
               <Text style={styles.quoteMarkText}>“</Text>
             </LinearGradient>
           </View>
@@ -116,10 +116,10 @@ export const ArcadeCard: React.FC<ArcadeCardProps> = ({ game, onPress }) => {
         return (
           <View style={styles.visualContainer}>
             <LinearGradient
-              colors={['rgba(0, 245, 160, 0.25)', 'rgba(0, 210, 255, 0.15)']}
+              colors={[Tokens.green25, Tokens.cyan15]}
               style={styles.silhouetteAura}
             >
-              <Ionicons name="scale-outline" size={44} color="#00F5A0" />
+              <Ionicons name="scale-outline" size={44} color={Tokens.green} />
             </LinearGradient>
           </View>
         );
@@ -128,7 +128,10 @@ export const ArcadeCard: React.FC<ArcadeCardProps> = ({ game, onPress }) => {
 
   return (
     <TouchableOpacity
-      style={styles.cardContainer}
+      style={[
+        styles.cardContainer,
+        { borderColor: `${game.accentColor}88`, shadowColor: game.accentColor },
+      ]}
       onPress={handlePress}
       activeOpacity={0.85}
     >
@@ -141,7 +144,7 @@ export const ArcadeCard: React.FC<ArcadeCardProps> = ({ game, onPress }) => {
 
         {game.completed && (
           <View style={styles.completedBadge}>
-            <Ionicons name="checkmark-circle" size={14} color="#00F5A0" />
+            <Ionicons name="checkmark-circle" size={14} color={Tokens.green} />
           </View>
         )}
       </View>
@@ -166,18 +169,16 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: 170,
     height: 250,
-    backgroundColor: 'rgba(19, 27, 47, 0.85)',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: Tokens.surface,
+    borderRadius: 24,
+    borderWidth: 1.5,
     padding: 14,
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 8,
   },
   badgeRow: {
     width: '100%',
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
   levelPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: Tokens.white06,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -233,13 +234,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Tokens.white10,
   },
   questionMarkOverlay: {
     position: 'absolute',
   },
   questionMarkText: {
-    color: '#FFFFFF',
+    color: Tokens.white,
     fontSize: 32,
     fontWeight: '900',
     opacity: 0.8,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
   },
   guessHintBadge: {
     marginTop: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: Tokens.white08,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -275,9 +276,9 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: Tokens.white08,
     borderWidth: 1,
-    borderColor: 'rgba(0, 210, 255, 0.3)',
+    borderColor: Tokens.cyan30,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0, 210, 255, 0.4)',
+    borderColor: Tokens.cyan40,
   },
   pixelGrid: {
     gap: 4,
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Tokens.white05,
   },
   pixelCellActive: {
     backgroundColor: ArcadeTheme.primary,

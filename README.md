@@ -41,6 +41,14 @@ This command will move the starter code to the **example** directory and create 
 - If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
 - Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
 
+## Crédits · Avatars
+
+Les avatars des joueurs sont générés avec [DiceBear](https://www.dicebear.com/), style **« lorelei »** par Lisa Wischofsky, sous licence [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (aucune attribution requise).
+
+Le style se change dans `src/components/ui/Avatar.tsx` (constante `AVATAR_STYLE`). Autres styles : **« adventurer »** (CC BY 4.0, attribution requise), **« notionists »** et **« big-smile »** (CC0), **« avataaars »**. Un visage SVG original maison reste affiché en secours si l'image ne charge pas (hors ligne).
+
+> Aucune image de personnage de manga/anime sous droit d'auteur n'est utilisée dans l'app.
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:
